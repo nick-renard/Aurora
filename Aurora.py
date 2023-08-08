@@ -349,7 +349,7 @@ class Aurora_Webserver(object):
         github_version = "Cannot read from github"
         try:
             githubURL = (
-                "https://raw.githubusercontent.com/AndrewMohawk/Aurora/master/VERSION"
+                "https://raw.githubusercontent.com/nick-renard/Aurora/master/VERSION"
             )
             github_page = urlopen(githubURL)
             github_version = github_page.read().decode("utf-8").strip()
