@@ -19,7 +19,9 @@ import cv2
 import sys
 from shutil import copyfile
 
-from jinja2 import Environment, FileSystemLoader
+#from jinja2 import Environment, FileSystemLoader
+from jinja2 import *
+
 
 env = Environment(loader=FileSystemLoader("webserver/templates"))
 
@@ -58,7 +60,7 @@ class AuroraManager:
                 os.environ["AURORA_DEBUG"], bool(os.environ["AURORA_DEBUG"])
             )
         )
-        if self.debug == True:
+        if self.debug:
             logging.getLogger().setLevel(logging.DEBUG)
         else:
             logging.info("SET DEBUG OFF")
@@ -105,7 +107,7 @@ class AuroraManager:
                     break
                 else:
                     logging.error("device {} failed".format(i))
-            if self.vid == False:
+            if not self.vid:
                 self.log("Failed to initialise video device")
                 sys.exit(1)
 
