@@ -26,7 +26,7 @@ fi
 echo "[+] Creating Install Directory"
 echo "------------------------------"
 mkdir $INSTALLDIR
-cd $INSTALLDIR || exit
+cd $INSTALLDIR
 echo "[+] Updating APT and installing dependencies"
 echo "------------------------------"
 apt update
