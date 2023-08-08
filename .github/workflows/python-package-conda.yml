@@ -1,12 +1,12 @@
 name: Python Package using Conda
 
-on: [push]
+on:
+  workflow_dispatch:
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 5
+  test-raspberry-pi:
+    name: test Raspberry Pi 4 64-bit
+    runs-on: self-hosted  # Indicates the job will run on the self-hosted runner (your Raspberry Pi)
 
     steps:
     - uses: actions/checkout@v3
@@ -21,6 +21,11 @@ jobs:
     - name: Install dependencies
       run: |
         conda env update --file environment.yml --name base
+    - name: Install pip3 and requirements
+      run: |
+        sudo apt-get update
+        sudo apt-get install python3-pip -y
+        pip3 install -r requirements.txt
     - name: Lint with flake8
       run: |
         conda install flake8
@@ -32,3 +37,4 @@ jobs:
       run: |
         conda install pytest
         pytest
+
