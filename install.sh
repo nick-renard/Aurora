@@ -26,11 +26,11 @@ fi
 echo "[+] Creating Install Directory"
 echo "------------------------------"
 mkdir $INSTALLDIR
-cd $INSTALLDIR
+cd $INSTALLDIR || exit
 echo "[+] Updating APT and installing dependencies"
 echo "------------------------------"
 apt update
-apt-get install -y libatlas-base-dev libportaudio2 python3-pip git python3-opencv
+apt-get install -y libatlas-base-dev libportaudio2 python3-pip git python3-opencv libgfortran5 python3-pyaudio
 echo "[+] Git Cloning Aurora base"
 echo "------------------------------"
 git clone https://github.com/nick-renard/Aurora.git .
@@ -45,7 +45,7 @@ systemctl enable aurora.service
 systemctl start aurora.service
 echo "[+] Service Status"
 echo "------------------------------"
-echo "Aurora status: `systemctl is-active aurora.service`"
+echo "Aurora status: $(systemctl is-active aurora.service)"
 echo "[+] Last 20 lines of aurora log"
 echo "------------------------------"
 journalctl -u aurora -n 20 --no-pager
