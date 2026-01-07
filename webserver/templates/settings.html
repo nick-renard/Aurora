@@ -1,0 +1,108 @@
+{% include 'header.html' %}
+<div class="card card-style" style="max-width:40rem;">
+    <div class="content mb-0">
+        <p class="mb-n1 color-highlight font-600">Aurora</p>
+        <h1>Custom Settings</h1>
+        <p class="mb-3">
+            Adjust HDMI capture and Aurora settings to fine-tune your ambient lighting experience.
+        </p>
+
+        <h5 class="font-16 font-700 mb-2">HDMI Capture Settings</h5>
+        <p class="font-11 opacity-70 mb-3">Adjust the video input settings for optimal color capture</p>
+        
+        <div class="row mb-3">
+            <div class="col-4 pt-2">
+                <span class="font-13">Brightness</span>
+            </div>
+            <div class="col-8">
+                <input id="hdmi_brightness" type="range" data-slider-min="-64" data-slider-max="64" data-slider-step="1"
+                    data-slider-value="{{hdmi_brightness}}" />
+                <span id="brightness_value" class="font-11 opacity-70">{{hdmi_brightness}}</span>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-4 pt-2">
+                <span class="font-13">Saturation</span>
+            </div>
+            <div class="col-8">
+                <input id="hdmi_saturation" type="range" data-slider-min="0" data-slider-max="255" data-slider-step="1"
+                    data-slider-value="{{hdmi_saturation}}" />
+                <span id="saturation_value" class="font-11 opacity-70">{{hdmi_saturation}}</span>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-4 pt-2">
+                <span class="font-13">Contrast</span>
+            </div>
+            <div class="col-8">
+                <input id="hdmi_contrast" type="range" data-slider-min="0" data-slider-max="255" data-slider-step="1"
+                    data-slider-value="{{hdmi_contrast}}" />
+                <span id="contrast_value" class="font-11 opacity-70">{{hdmi_contrast}}</span>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-4 pt-2">
+                <span class="font-13">Hue</span>
+            </div>
+            <div class="col-8">
+                <input id="hdmi_hue" type="range" data-slider-min="-40" data-slider-max="40" data-slider-step="1"
+                    data-slider-value="{{hdmi_hue}}" />
+                <span id="hue_value" class="font-11 opacity-70">{{hdmi_hue}}</span>
+            </div>
+        </div>
+
+        <div class="divider mb-3"></div>
+
+        <h5 class="font-16 font-700 mb-2">Aurora Settings</h5>
+        <p class="font-11 opacity-70 mb-3">Fine-tune color and brightness behavior</p>
+
+        <div class="row mb-3">
+            <div class="col-4 pt-2">
+                <span class="font-13">Gamma</span>
+            </div>
+            <div class="col-8">
+                <input id="aurora_gamma" type="range" data-slider-min="0.1" data-slider-max="3.0" data-slider-step="0.1"
+                    data-slider-value="{{aurora_gamma}}" />
+                <span id="gamma_value" class="font-11 opacity-70">{{aurora_gamma}}</span>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-4 pt-2">
+                <span class="font-13">Dark Threshold</span>
+            </div>
+            <div class="col-8">
+                <input id="aurora_dark_threshold" type="range" data-slider-min="0" data-slider-max="100" data-slider-step="1"
+                    data-slider-value="{{aurora_dark_threshold}}" />
+                <span id="dark_threshold_value" class="font-11 opacity-70">{{aurora_dark_threshold}}</span>
+            </div>
+        </div>
+
+        <div class="divider mb-3"></div>
+
+        <div class="d-flex justify-content-between">
+            <a href="#" id="reset_button"
+                class="btn btn-m mb-3 rounded-xs text-uppercase font-900 shadow-s bg-red-light">
+                Reset to Defaults
+            </a>
+            <a href="#" id="save_settings_button"
+                class="btn btn-m mb-3 rounded-xs text-uppercase font-900 shadow-s bg-green-dark">
+                Save Settings
+            </a>
+        </div>
+
+        <div class="alert bg-blue-dark mb-3" role="alert" style="display:none;" id="status_message">
+            <span class="alert-icon"><i class="fa fa-check-circle"></i></span>
+            <strong class="font-13">Success!</strong>
+            <p id="status_text" class="font-11"></p>
+            <button type="button" class="close color-white opacity-60 font-16" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+
+    </div>
+</div>
+{% include 'footer.html' %}

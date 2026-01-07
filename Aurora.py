@@ -342,6 +342,104 @@ class Aurora_Webserver(object):
         template_variables["current_version"] = current_version
         return tmpl.render(template_variables)
 
+    @cherrypy.tools.json_out()
+    @cherrypy.expose
+    def current_status(self):
+        """Returns simple on/off status"""
+        return {"status": "on" if self.manager.enabled else "off"}
+
+    @cherrypy.tools.json_out()
+    @cherrypy.expose
+    def current_extension(self):
+        """Returns current extension name"""
+        extension_map = {
+            "Aurora_Ambient_AutoCrop": "autocrop",
+            "Aurora_Ambient_NoCrop": "nocrop",
+            "Aurora_Ambient_16x9": "16x9",
+            "Aurora_Rainbow": "rainbow",
+            "Aurora_Meteor": "meteor",
+            "Aurora_AudioSpectogram": "audio spectogram"
+        }
+        extension_class = self.manager.current_extension_name
+        extension_friendly = extension_map.get(extension_class, extension_class)
+        return {
+            "extension": extension_friendly,
+            "extension_class": extension_class,
+            "extension_name": self.manager.current_extension.Name
+        }
+
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.json_in()
+    @cherrypy.expose
+    def set_status(self):
+        """Set Aurora on or off"""
+        input_json = cherrypy.request.json
+        if "status" not in input_json:
+            return {"status": "error", "message": "Missing 'status' parameter. Use 'on' or 'off'"}
+        
+        status = input_json["status"].lower()
+        if status not in ["on", "off"]:
+            return {"status": "error", "message": "Invalid status. Use 'on' or 'off'"}
+        
+        try:
+            enabled_status = (status == "on")
+            self.manager.enabled = enabled_status
+            
+            if enabled_status:
+                self.manager.setupExtension()
+            else:
+                self.manager.tearDownExtension()
+            
+            self.manager.config.set("GENERAL", "enabled", str(enabled_status))
+            self.manager.saveConfig()
+            
+            return {"status": "success", "current_status": status}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.json_in()
+    @cherrypy.expose
+    def set_extension(self):
+        """Set the current extension"""
+        input_json = cherrypy.request.json
+        if "extension" not in input_json:
+            return {"status": "error", "message": "Missing 'extension' parameter"}
+        
+        extension_input = input_json["extension"].lower()
+        
+        # Map friendly names to class names
+        extension_map = {
+            "autocrop": "Aurora_Ambient_AutoCrop",
+            "nocrop": "Aurora_Ambient_NoCrop",
+            "16x9": "Aurora_Ambient_16x9",
+            "rainbow": "Aurora_Rainbow",
+            "meteor": "Aurora_Meteor",
+            "audio spectogram": "Aurora_AudioSpectogram",
+            "audiospectogram": "Aurora_AudioSpectogram"
+        }
+        
+        # Allow direct class name or friendly name
+        extension_class = extension_map.get(extension_input, extension_input)
+        
+        # Validate extension exists
+        if extension_class not in self.manager.extensions and extension_class not in extension_map.values():
+            available = list(extension_map.keys())
+            return {
+                "status": "error", 
+                "message": f"Invalid extension. Available: {', '.join(available)}"
+            }
+        
+        try:
+            self.manager.setCurrentExtension(extension_class)
+            return {
+                "status": "success", 
+                "extension": extension_input,
+                "extension_class": extension_class
+            }
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
     @cherrypy.expose
     def about(self):
         self.manager.loadConfig()
@@ -440,6 +538,28 @@ class Aurora_Webserver(object):
             "GENERAL", "enabled"
         )
         template_variables["page"] = "view"
+        template_variables["msg"] = self.manager.messages
+        self.manager.messages = []
+        return tmpl.render(template_variables)
+
+    @cherrypy.expose
+    def settings(self):
+        """Custom settings page for HDMI and Aurora configuration"""
+        self.manager.populateExtensions()
+        tmpl = env.get_template("settings.html")
+        template_variables = {}
+        
+        # Load current config values
+        template_variables["hdmi_brightness"] = self.manager.config.getint("HDMI", "HDMI_BRIGHTNESS")
+        template_variables["hdmi_saturation"] = self.manager.config.getint("HDMI", "HDMI_SATURATION")
+        template_variables["hdmi_contrast"] = self.manager.config.getint("HDMI", "HDMI_CONTRAST")
+        template_variables["hdmi_hue"] = self.manager.config.getint("HDMI", "HDMI_HUE")
+        template_variables["aurora_gamma"] = self.manager.config.getfloat("AURORA", "AURORA_GAMMA")
+        template_variables["aurora_dark_threshold"] = self.manager.config.getint("AURORA", "AURORA_DARKTHRESHOLD")
+        
+        template_variables["configured"] = self.manager.config.getboolean("GENERAL", "configured")
+        template_variables["enabled"] = self.manager.config.getboolean("GENERAL", "enabled")
+        template_variables["page"] = "settings"
         template_variables["msg"] = self.manager.messages
         self.manager.messages = []
         return tmpl.render(template_variables)
@@ -686,6 +806,121 @@ class Aurora_Webserver(object):
         else:
             error_string = ",".join(errors)
             return {"status": "error", "error": error_string}
+
+    @cherrypy.tools.json_out()
+    @cherrypy.expose
+    def get_config(self):
+        """Get current Aurora configuration settings"""
+        try:
+            config_data = {
+                "hdmi": {
+                    "brightness": self.manager.config.getint("HDMI", "HDMI_BRIGHTNESS"),
+                    "saturation": self.manager.config.getint("HDMI", "HDMI_SATURATION"),
+                    "contrast": self.manager.config.getint("HDMI", "HDMI_CONTRAST"),
+                    "hue": self.manager.config.getint("HDMI", "HDMI_HUE")
+                },
+                "aurora": {
+                    "gamma": self.manager.config.getfloat("AURORA", "AURORA_GAMMA"),
+                    "dark_threshold": self.manager.config.getint("AURORA", "AURORA_DARKTHRESHOLD"),
+                    "pixel_count_total": self.manager.config.getint("AURORA", "AURORA_PIXELCOUNT_TOTAL"),
+                    "pixel_count_left": self.manager.config.getint("AURORA", "AURORA_PIXELCOUNT_LEFT"),
+                    "pixel_count_right": self.manager.config.getint("AURORA", "AURORA_PIXELCOUNT_RIGHT"),
+                    "pixel_count_top": self.manager.config.getint("AURORA", "AURORA_PIXELCOUNT_TOP"),
+                    "pixel_count_bottom": self.manager.config.getint("AURORA", "AURORA_PIXELCOUNT_BOTTOM")
+                },
+                "general": {
+                    "enabled": self.manager.config.getboolean("GENERAL", "enabled"),
+                    "configured": self.manager.config.getboolean("GENERAL", "configured")
+                }
+            }
+            return {"status": "success", "config": config_data}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.json_in()
+    @cherrypy.expose
+    def update_aurora_config(self):
+        """Update Aurora configuration settings (brightness, contrast, gamma, etc.)"""
+        input_json = cherrypy.request.json
+        errors = []
+        updated_settings = []
+        
+        try:
+            # HDMI Settings
+            if "brightness" in input_json:
+                try:
+                    brightness = int(input_json["brightness"])
+                    self.manager.vid.set(cv2.CAP_PROP_BRIGHTNESS, brightness)
+                    self.manager.config.set("HDMI", "HDMI_BRIGHTNESS", str(brightness))
+                    updated_settings.append(f"brightness={brightness}")
+                except Exception as e:
+                    errors.append(f"brightness: {str(e)}")
+            
+            if "saturation" in input_json:
+                try:
+                    saturation = int(input_json["saturation"])
+                    self.manager.vid.set(cv2.CAP_PROP_SATURATION, saturation)
+                    self.manager.config.set("HDMI", "HDMI_SATURATION", str(saturation))
+                    updated_settings.append(f"saturation={saturation}")
+                except Exception as e:
+                    errors.append(f"saturation: {str(e)}")
+            
+            if "contrast" in input_json:
+                try:
+                    contrast = int(input_json["contrast"])
+                    self.manager.vid.set(cv2.CAP_PROP_CONTRAST, contrast)
+                    self.manager.config.set("HDMI", "HDMI_CONTRAST", str(contrast))
+                    updated_settings.append(f"contrast={contrast}")
+                except Exception as e:
+                    errors.append(f"contrast: {str(e)}")
+            
+            if "hue" in input_json:
+                try:
+                    hue = int(input_json["hue"])
+                    self.manager.vid.set(cv2.CAP_PROP_HUE, hue)
+                    self.manager.config.set("HDMI", "HDMI_HUE", str(hue))
+                    updated_settings.append(f"hue={hue}")
+                except Exception as e:
+                    errors.append(f"hue: {str(e)}")
+            
+            # Aurora Settings
+            if "gamma" in input_json:
+                try:
+                    gamma = float(input_json["gamma"])
+                    self.manager.current_extension.gamma = gamma
+                    self.manager.config.set("AURORA", "AURORA_GAMMA", str(gamma))
+                    updated_settings.append(f"gamma={gamma}")
+                except Exception as e:
+                    errors.append(f"gamma: {str(e)}")
+            
+            if "dark_threshold" in input_json:
+                try:
+                    dark_threshold = int(input_json["dark_threshold"])
+                    self.manager.current_extension.darkThreshhold = dark_threshold
+                    self.manager.config.set("AURORA", "AURORA_DARKTHRESHOLD", str(dark_threshold))
+                    updated_settings.append(f"dark_threshold={dark_threshold}")
+                except Exception as e:
+                    errors.append(f"dark_threshold: {str(e)}")
+            
+            # Save config if any settings were updated
+            if len(updated_settings) > 0:
+                self.manager.saveConfig()
+            
+            if len(errors) == 0:
+                return {
+                    "status": "success",
+                    "message": f"Updated: {', '.join(updated_settings)}"
+                }
+            else:
+                return {
+                    "status": "partial",
+                    "updated": updated_settings,
+                    "errors": errors
+                }
+        
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
