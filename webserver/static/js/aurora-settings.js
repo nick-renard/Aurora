@@ -8,8 +8,17 @@ let defaultSettings = {
     dark_threshold: 20
 };
 
-// Load current config on page load
+// Initialize sliders first, then load config
 $(document).ready(function() {
+    // Initialize all sliders before loading config
+    $('#hdmi_brightness').slider();
+    $('#hdmi_saturation').slider();
+    $('#hdmi_contrast').slider();
+    $('#hdmi_hue').slider();
+    $('#aurora_gamma').slider();
+    $('#aurora_dark_threshold').slider();
+    
+    // Now load the config values
     loadCurrentConfig();
 });
 
@@ -76,6 +85,26 @@ function refreshPreview() {
     });
 }
 
+function refreshPreview() {
+    // Trigger screenshot generation
+    $.ajax({
+        url: "/screenshot",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({}),
+        success: function(response) {
+            if (response.status === "ok") {
+                // Reload image with cache buster
+                const timestamp = new Date().getTime();
+                $('#preview_screenshot').attr('src', '/load_screenshot?t=' + timestamp);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.log("Screenshot refresh failed (this is normal if Aurora is off):", error);
+        }
+    });
+}
+
 function loadCurrentConfig() {
     $.ajax({
         url: "/get_config",
@@ -85,7 +114,7 @@ function loadCurrentConfig() {
             if (response.status === "success") {
                 const config = response.config;
                 
-                // Update sliders with current values
+                // Update sliders with current values (sliders are already initialized)
                 $('#hdmi_brightness').slider('setValue', config.hdmi.brightness);
                 $('#hdmi_saturation').slider('setValue', config.hdmi.saturation);
                 $('#hdmi_contrast').slider('setValue', config.hdmi.contrast);
