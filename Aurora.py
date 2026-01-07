@@ -559,6 +559,13 @@ class Aurora_Webserver(object):
         
         template_variables["configured"] = self.manager.config.getboolean("GENERAL", "configured")
         template_variables["enabled"] = self.manager.config.getboolean("GENERAL", "enabled")
+        template_variables["extensions_meta"] = self.manager.extensions
+        template_variables["current_extension_meta"] = self.manager.current_extension_meta
+        if self.manager.current_extension != False:
+            template_variables["fps"] = self.manager.current_extension.FPS_avg
+        else:
+            template_variables["fps"] = 0
+        template_variables["timestamp"] = int(time.time())
         template_variables["page"] = "settings"
         template_variables["msg"] = self.manager.messages
         self.manager.messages = []

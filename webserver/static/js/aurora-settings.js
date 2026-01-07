@@ -13,6 +13,69 @@ $(document).ready(function() {
     loadCurrentConfig();
 });
 
+// Extension selector change
+$('#extension_selector').on('change', function(event) {
+    const extensionName = $(this).val();
+    $.ajax({
+        url: "/update_extension",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({extension_name: extensionName}),
+        success: function(response) {
+            if (response.status === "ok") {
+                showMessage("Extension changed successfully!", "success");
+                // Refresh preview after extension change
+                setTimeout(refreshPreview, 500);
+            }
+        },
+        error: function(xhr, status, error) {
+            showMessage("Error changing extension: " + error, "error");
+        }
+    });
+});
+
+// System toggle
+$('#toggle_aurora_enabled').on('change', function() {
+    const isEnabled = $(this).is(':checked');
+    $.ajax({
+        url: "/update_config",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({enabled: isEnabled}),
+        success: function(response) {
+            if (response.status === "ok") {
+                showMessage(response.message, "success");
+            }
+        },
+        error: function(xhr, status, error) {
+            showMessage("Error toggling system: " + error, "error");
+        }
+    });
+});
+
+// Refresh preview button
+$('#refresh_preview_button').on('click', function(event) {
+    event.preventDefault();
+    refreshPreview();
+});
+
+function refreshPreview() {
+    // Trigger screenshot generation
+    $.ajax({
+        url: "/screenshot",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({}),
+        success: function(response) {
+            if (response.status === "ok") {
+                // Reload image with cache buster
+                const timestamp = new Date().getTime();
+                $('#preview_screenshot').attr('src', '/load_screenshot?t=' + timestamp);
+            }
+        }
+    });
+}
+
 function loadCurrentConfig() {
     $.ajax({
         url: "/get_config",
@@ -95,6 +158,8 @@ $('#save_settings_button').on("click", function(event) {
         success: function(response) {
             if (response.status === "success") {
                 showMessage("Settings saved successfully!", "success");
+                // Refresh preview to show changes
+                setTimeout(refreshPreview, 300);
             } else {
                 showMessage("Error saving settings: " + response.message, "error");
             }
