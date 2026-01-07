@@ -971,6 +971,7 @@ class Aurora_Webserver(object):
             f = open(screenshot_path, "rb")
             contents = f.read()
             f.close()
+            cherrypy.response.headers['Content-Type'] = 'image/jpeg'
             return contents
         except Exception as e:
             self.manager.log(
@@ -978,7 +979,9 @@ class Aurora_Webserver(object):
                     self.manager.screenshot_path, str(e)
                 )
             )
-            return False
+            # Return a 1x1 transparent PNG instead of False to prevent 500 errors
+            cherrypy.response.headers['Content-Type'] = 'image/png'
+            return base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==')
 
     @cherrypy.expose
     def load_pixel_image(self, **params):

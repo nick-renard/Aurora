@@ -121,9 +121,16 @@
                 </div>
             </div>
             <p class="font-11 opacity-70 mb-3">See the effect of your changes</p>
+            {% if enabled %}
             <img class="img-fluid rounded-s" id="preview_screenshot" src="/load_screenshot?t={{timestamp}}" 
-                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22%3E%3Crect fill=%22%23ddd%22 width=%22400%22 height=%22200%22/%3E%3Ctext fill=%22%23666%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3EPreview unavailable%3C/text%3E%3C/svg%3E';" 
+                 onerror="this.style.display='none';" 
                  alt="HDMI Preview" />
+            {% else %}
+            <div class="alert bg-blue-dark rounded-s text-center" style="padding: 60px 20px;">
+                <i class="fa fa-info-circle fa-3x mb-3 opacity-50"></i>
+                <p class="mb-0 opacity-70">Enable Aurora to see live preview</p>
+            </div>
+            {% endif %}
         </div>
 
         <div class="divider mb-3"></div>
