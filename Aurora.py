@@ -175,7 +175,26 @@ class AuroraManager:
     def loadConfig(self):
         self.config = configparser.ConfigParser()
         self.config.optionxform = str
+        
+        # Check if config file exists, if not try to copy from backup
+        if not os.path.exists(self.config_file):
+            backup_config = "./config.ini.bak"
+            if os.path.exists(backup_config):
+                print(f"Config file not found, copying from {backup_config}")
+                copyfile(backup_config, self.config_file)
+            else:
+                print(f"ERROR: Config file {self.config_file} not found and no backup available")
+                sys.exit(1)
+        
         self.config.read(self.config_file)
+        
+        # Validate required sections exist
+        required_sections = ["AURORA", "EXTENSIONS", "GENERAL"]
+        missing_sections = [s for s in required_sections if not self.config.has_section(s)]
+        if missing_sections:
+            print(f"ERROR: Config file is missing required sections: {missing_sections}")
+            print(f"Please ensure {self.config_file} has all required sections or delete it to recreate from backup")
+            sys.exit(1)
 
         # Lets load the enviroment variables
         for key, val in self.config["AURORA"].items():
