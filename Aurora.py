@@ -54,10 +54,10 @@ class AuroraManager:
         logging.basicConfig(
             format="%(asctime)s %(message)s", datefmt="%m/%d/%Y %I:%M:%S %p"
         )
-        self.debug = bool(os.environ["AURORA_DEBUG"])
+        self.debug = os.environ.get("AURORA_DEBUG", "false").lower() in ("true", "1", "yes")
         logging.info(
             "DEBUG OS ENV: {} status: {}".format(
-                os.environ["AURORA_DEBUG"], bool(os.environ["AURORA_DEBUG"])
+                os.environ.get("AURORA_DEBUG", "false"), self.debug
             )
         )
         if self.debug:
